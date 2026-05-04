@@ -3,28 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wetter · Rhede · Raalte · Zlín</title>
+<title>Wetter · Rhede · Raalte · Zlín · Brno</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sky-deep:   #0b1a2e;
-    --sky-mid:    #132844;
-    --sky-glow:   #1e4070;
-    --accent:     #5eaee8;
-    --accent2:    #f5c542;
-    --cloud:      #c9dff5;
-    --mist:       rgba(94,174,232,0.12);
-    --rain:       #7ab8e8;
-    --warm:       #f79552;
-    --text:       #e8f2fc;
-    --text-dim:   #7fa8cc;
-    --card-bg:    rgba(19,40,68,0.80);
-    --border:     rgba(94,174,232,0.18);
-    --radius:     18px;
+    --sky-deep:  #0b1a2e;
+    --accent:    #5eaee8;
+    --warm:      #f79552;
+    --cloud:     #c9dff5;
+    --rain:      #7ab8e8;
+    --text:      #e8f2fc;
+    --text-dim:  #7fa8cc;
+    --card-bg:   rgba(19,40,68,0.80);
+    --border:    rgba(94,174,232,0.18);
+    --radius:    18px;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'DM Mono', monospace;
     background: var(--sky-deep);
@@ -33,21 +27,18 @@
     overflow-x: hidden;
   }
 
-  /* ── Starfield ── */
+  /* Starfield */
   .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   .star {
-    position: absolute;
-    border-radius: 50%;
-    background: #fff;
-    animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
-    opacity: 0;
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle var(--d, 3s) ease-in-out infinite alternate; opacity: 0;
   }
   @keyframes twinkle { from { opacity: 0.05; } to { opacity: var(--op, 0.6); } }
 
-  /* ── Aurora strip ── */
+  /* Aurora */
   .aurora {
-    position: fixed; top: 0; left: 0; right: 0;
-    height: 340px; z-index: 0; pointer-events: none;
+    position: fixed; top: 0; left: 0; right: 0; height: 340px;
+    z-index: 0; pointer-events: none;
     background: radial-gradient(ellipse 90% 60% at 50% -10%,
       rgba(30,64,112,0.9) 0%, rgba(94,174,232,0.18) 55%, transparent 80%);
     animation: aurora-shift 12s ease-in-out infinite alternate;
@@ -58,215 +49,101 @@
     100% { transform: scaleX(0.95) translateY(-6px); }
   }
 
-  /* ── Layout ── */
+  /* Layout */
   .page { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 48px 24px 80px; }
 
-  header {
-    text-align: center;
-    margin-bottom: 56px;
-    animation: fade-up 0.8s ease both;
-  }
+  header { text-align: center; margin-bottom: 56px; animation: fade-up 0.8s ease both; }
   header h1 {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 5vw, 3.4rem);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--cloud);
+    font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 700;
+    letter-spacing: 0.04em; color: var(--cloud);
     text-shadow: 0 0 40px rgba(94,174,232,0.5);
   }
-  header .subtitle {
-    margin-top: 10px;
-    font-size: 0.72rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--text-dim);
+  header .subtitle { margin-top: 10px; font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-dim); }
+  header .timestamp { margin-top: 6px; font-size: 0.68rem; color: var(--text-dim); opacity: 0.7; }
+
+  /* Loading */
+  .loading {
+    text-align: center; padding: 80px 0;
+    font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-dim); animation: pulse 1.5s ease-in-out infinite;
   }
-  header .timestamp {
-    margin-top: 6px;
-    font-size: 0.68rem;
-    color: var(--text-dim);
-    opacity: 0.7;
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .loading-dots::after { content: ''; animation: dots 1.5s steps(4,end) infinite; }
+  @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} 100%{content:''} }
+
+  /* Error */
+  .error-msg {
+    text-align: center; padding: 40px;
+    color: #e87d7d; font-size: 0.8rem; letter-spacing: 0.1em;
+    border: 1px solid rgba(232,125,125,0.3); border-radius: var(--radius);
+    background: rgba(232,125,125,0.06); line-height: 2;
   }
 
-  /* ── Grid ── */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 28px;
-  }
+  /* Grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; }
 
-  /* ── Card ── */
+  /* Card */
   .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px 28px 28px;
-    backdrop-filter: blur(18px);
-    animation: fade-up 0.8s ease both;
-    position: relative;
-    overflow: hidden;
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px 28px 28px;
+    backdrop-filter: blur(18px); animation: fade-up 0.8s ease both;
+    position: relative; overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(94,174,232,0.28);
-  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(94,174,232,0.28); }
   .card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius);
+    content: ''; position: absolute; inset: 0; border-radius: var(--radius);
     background: linear-gradient(135deg, rgba(94,174,232,0.06) 0%, transparent 60%);
     pointer-events: none;
   }
-  .card:nth-child(1) { animation-delay: 0.1s; }
-  .card:nth-child(2) { animation-delay: 0.25s; }
-  .card:nth-child(3) { animation-delay: 0.4s; }
+  .card:nth-child(1){animation-delay:0.1s} .card:nth-child(2){animation-delay:0.25s}
+  .card:nth-child(3){animation-delay:0.4s}  .card:nth-child(4){animation-delay:0.55s}
 
-  /* ── Card header ── */
-  .card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 24px;
-  }
-  .location-info {}
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
   .flag { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; }
-  .city {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: var(--cloud);
-    line-height: 1.15;
-  }
-  .country {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
+  .city { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 700; color: var(--cloud); line-height: 1.15; }
+  .country { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-top: 2px; }
   .condition-icon { font-size: 3rem; line-height: 1; filter: drop-shadow(0 0 12px rgba(94,174,232,0.5)); }
 
-  /* ── Current temp ── */
-  .current-temp {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 6px;
-  }
-  .temp-value {
-    font-family: 'Playfair Display', serif;
-    font-size: 4rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--accent);
-    text-shadow: 0 0 30px rgba(94,174,232,0.4);
-  }
+  .current-temp { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+  .temp-value { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 700; line-height: 1; color: var(--accent); text-shadow: 0 0 30px rgba(94,174,232,0.4); }
   .temp-unit { font-size: 1.4rem; color: var(--text-dim); }
-  .condition-text {
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 28px;
-  }
+  .condition-text { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 28px; }
 
-  /* ── Divider ── */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin: 0 -4px 24px;
-  }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 -4px 24px; }
 
-  /* ── Forecast ── */
-  .forecast-label {
-    font-size: 0.6rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 14px;
-  }
-  .forecast-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(94,174,232,0.07);
-  }
+  .forecast-label { font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; }
+  .forecast-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(94,174,232,0.07); }
   .forecast-row:last-child { border-bottom: none; }
   .f-day { font-size: 0.7rem; color: var(--text-dim); width: 36px; }
   .f-icon { font-size: 1.1rem; }
   .f-bar-wrap { flex: 1; margin: 0 12px; position: relative; height: 4px; background: rgba(94,174,232,0.1); border-radius: 2px; }
-  .f-bar {
-    position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--warm));
-    transition: width 1s ease;
-  }
-  .f-temp {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--cloud);
-    width: 36px;
-    text-align: right;
-  }
-  .f-rain {
-    font-size: 0.62rem;
-    color: var(--rain);
-    width: 28px;
-    text-align: right;
-  }
+  .f-bar { position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--warm)); transition: width 1s ease; }
+  .f-temp { font-size: 0.75rem; font-weight: 500; color: var(--cloud); width: 36px; text-align: right; }
+  .f-rain { font-size: 0.62rem; color: var(--rain); width: 28px; text-align: right; }
 
-  /* ── Comparison strip ── */
-  .compare-section {
-    margin-top: 56px;
-    animation: fade-up 0.8s 0.55s ease both;
-  }
-  .compare-label {
-    text-align: center;
-    font-size: 0.65rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 20px;
-  }
-  .compare-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-  }
-  .compare-day {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 10px;
-    text-align: center;
-    backdrop-filter: blur(12px);
-  }
-  .compare-day-name {
-    font-size: 0.6rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-  }
+  /* Compare */
+  .compare-section { margin-top: 56px; animation: fade-up 0.8s 0.65s ease both; }
+  .compare-label { text-align: center; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 20px; }
+  .compare-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .compare-day { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; backdrop-filter: blur(12px); }
+  .compare-day-name { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
   .compare-bars { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 56px; }
   .compare-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .compare-bar {
-    width: 12px;
-    border-radius: 3px 3px 0 0;
-    background: var(--col);
-    transition: height 1.2s ease;
-  }
-  .compare-bar-val { font-size: 0.55rem; color: var(--text-dim); }
+  .compare-bar { width: 10px; border-radius: 3px 3px 0 0; background: var(--col); transition: height 1.2s ease; }
+  .compare-bar-val { font-size: 0.5rem; color: var(--text-dim); }
 
-  /* ── Animations ── */
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(22px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+  .legend { display: flex; justify-content: center; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.62rem; color: var(--text-dim); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-  /* ── Mobile ── */
+  .source { text-align: center; margin-top: 40px; font-size: 0.6rem; color: var(--text-dim); opacity: 0.5; letter-spacing: 0.1em; }
+  .source a { color: var(--text-dim); text-decoration: none; }
+  .source a:hover { opacity: 1; text-decoration: underline; }
+
+  @keyframes fade-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+
   @media (max-width: 600px) {
     .compare-grid { grid-template-columns: repeat(3, 1fr); }
     .compare-day:nth-child(n+4) { display: none; }
@@ -285,12 +162,17 @@
     <div class="timestamp" id="ts"></div>
   </header>
 
-  <div class="grid" id="cards"></div>
+  <div id="main-content">
+    <div class="loading">Wetterdaten werden geladen <span class="loading-dots"></span></div>
+  </div>
 
-  <div class="compare-section">
+  <div class="compare-section" id="compare-section" style="display:none">
     <div class="compare-label">5-Tage Höchsttemperaturen im Vergleich</div>
     <div class="compare-grid" id="compare"></div>
+    <div class="legend" id="legend"></div>
   </div>
+
+  <div class="source">Echtzeit-Daten: <a href="https://open-meteo.com" target="_blank">Open-Meteo.com</a> &nbsp;·&nbsp; Aktualisiert bei jedem Seitenaufruf</div>
 </div>
 
 <script>
@@ -300,172 +182,166 @@ for (let i = 0; i < 130; i++) {
   const s = document.createElement('div');
   s.className = 'star';
   const sz = Math.random() * 2.2 + 0.5;
-  s.style.cssText = `
-    width:${sz}px; height:${sz}px;
-    left:${Math.random()*100}%;
-    top:${Math.random()*100}%;
-    --d:${(Math.random()*4+2).toFixed(1)}s;
-    --op:${(Math.random()*0.5+0.15).toFixed(2)};
-    animation-delay:${(Math.random()*5).toFixed(1)}s;
-  `;
+  s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--op:${(Math.random()*0.5+0.15).toFixed(2)};animation-delay:${(Math.random()*5).toFixed(1)}s;`;
   starsEl.appendChild(s);
 }
 
 // ── Timestamp ──
 document.getElementById('ts').textContent =
   'Stand: ' + new Date().toLocaleString('de-DE', {
-    weekday:'long', day:'2-digit', month:'long', year:'numeric',
-    hour:'2-digit', minute:'2-digit'
+    weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'
   }) + ' Uhr';
 
-// ── Data ──
-const weatherData = [
-  {
-    city: 'Rhede',
-    country: 'Deutschland',
-    flag: '🇩🇪',
-    current: { temperature: 12.7, condition: 'cloudy', condition_text: 'Bewölkt' },
-    daily: [
-      { date:'2026-05-04', day_of_week:'Mo', high:19.8, precipitation_chance:35 },
-      { date:'2026-05-05', day_of_week:'Di', high:12.7, precipitation_chance:35 },
-      { date:'2026-05-06', day_of_week:'Mi', high:9.1,  precipitation_chance:45 },
-      { date:'2026-05-07', day_of_week:'Do', high:14.5, precipitation_chance:20 },
-      { date:'2026-05-08', day_of_week:'Fr', high:13.0, precipitation_chance:15 },
-    ]
-  },
-  {
-    city: 'Raalte',
-    country: 'Niederlande',
-    flag: '🇳🇱',
-    current: { temperature: 12.7, condition: 'mostly_cloudy', condition_text: 'Meist bewölkt' },
-    daily: [
-      { date:'2026-05-04', day_of_week:'Mo', high:19.4, precipitation_chance:35 },
-      { date:'2026-05-05', day_of_week:'Di', high:12.5, precipitation_chance:35 },
-      { date:'2026-05-06', day_of_week:'Mi', high:9.4,  precipitation_chance:20 },
-      { date:'2026-05-07', day_of_week:'Do', high:15.7, precipitation_chance:10 },
-      { date:'2026-05-08', day_of_week:'Fr', high:14.2, precipitation_chance:10 },
-    ]
-  },
-  {
-    city: 'Zlín',
-    country: 'Tschechien',
-    flag: '🇨🇿',
-    current: { temperature: 12.6, condition: 'partly_cloudy', condition_text: 'Teils bewölkt' },
-    daily: [
-      { date:'2026-05-04', day_of_week:'Mo', high:25.2, precipitation_chance:10 },
-      { date:'2026-05-05', day_of_week:'Di', high:24.6, precipitation_chance:10 },
-      { date:'2026-05-06', day_of_week:'Mi', high:23.0, precipitation_chance:20 },
-      { date:'2026-05-07', day_of_week:'Do', high:17.5, precipitation_chance:35 },
-      { date:'2026-05-08', day_of_week:'Fr', high:16.0, precipitation_chance:25 },
-    ]
-  },
-  {
-    city: 'Brno',
-    country: 'Tschechien',
-    flag: '🇨🇿',
-    current: { temperature: 19.7, condition: 'partly_cloudy', condition_text: 'Teils bewölkt' },
-    daily: [
-      { date:'2026-05-04', day_of_week:'Mo', high:25.6, precipitation_chance:10 },
-      { date:'2026-05-05', day_of_week:'Di', high:25.4, precipitation_chance:10 },
-      { date:'2026-05-06', day_of_week:'Mi', high:23.5, precipitation_chance:25 },
-      { date:'2026-05-07', day_of_week:'Do', high:20.4, precipitation_chance:35 },
-      { date:'2026-05-08', day_of_week:'Fr', high:21.5, precipitation_chance:20 },
-    ]
-  }
+// ── Config ──
+const LOCATIONS = [
+  { city:'Rhede',  country:'Deutschland', flag:'🇩🇪', lat:51.8344, lon:6.6993  },
+  { city:'Raalte', country:'Niederlande', flag:'🇳🇱', lat:52.3908, lon:6.2769  },
+  { city:'Zlín',   country:'Tschechien',  flag:'🇨🇿', lat:49.2233, lon:17.6608 },
+  { city:'Brno',   country:'Tschechien',  flag:'🇨🇿', lat:49.1951, lon:16.6068 },
 ];
+const BAR_COLORS = ['#5eaee8','#4fc3a1','#f5c542','#e87d5e'];
+const DAY_NAMES  = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 
-const conditionIcon = c => ({
-  sunny:        '☀️',
-  clear:        '🌙',
-  partly_cloudy:'⛅',
-  mostly_cloudy:'🌥️',
-  cloudy:       '☁️',
-  rain:         '🌧️',
-  drizzle:      '🌦️',
-  snow:         '❄️',
-  thunderstorm: '⛈️',
-  foggy:        '🌫️',
-}[c] || '🌡️');
+// ── WMO code → label + icon ──
+function wmoInfo(code, isDay) {
+  if (code === 0)       return { text:'Klar',           icon: isDay ? '☀️' : '🌙' };
+  if (code <= 2)        return { text:'Teils bewölkt',  icon:'⛅' };
+  if (code === 3)       return { text:'Bewölkt',         icon:'☁️' };
+  if (code <= 49)       return { text:'Neblig',          icon:'🌫️' };
+  if (code <= 55)       return { text:'Nieselregen',     icon:'🌦️' };
+  if (code <= 67)       return { text:'Regen',           icon:'🌧️' };
+  if (code <= 77)       return { text:'Schnee',          icon:'❄️' };
+  if (code <= 82)       return { text:'Regenschauer',    icon:'🌦️' };
+  if (code <= 86)       return { text:'Schneeschauer',   icon:'🌨️' };
+  if (code <= 99)       return { text:'Gewitter',        icon:'⛈️' };
+  return { text:'Unbekannt', icon:'🌡️' };
+}
 
 const rainIcon = p => p >= 70 ? '🌧️' : p >= 40 ? '🌦️' : p >= 15 ? '⛅' : '☀️';
 
-// All-location max high for bar scaling
-const allHighs = weatherData.flatMap(d => d.daily.map(x => x.high));
-const maxHigh  = Math.max(...allHighs);
+// ── Fetch one location ──
+async function fetchWeather(loc) {
+  const url = `https://api.open-meteo.com/v1/forecast`
+    + `?latitude=${loc.lat}&longitude=${loc.lon}`
+    + `&current=temperature_2m,weather_code,is_day`
+    + `&daily=weather_code,temperature_2m_max,precipitation_probability_max`
+    + `&timezone=auto&forecast_days=5`;
 
-// ── Cards ──
-const cardsEl = document.getElementById('cards');
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} für ${loc.city}`);
+  const d = await res.json();
 
-weatherData.forEach(loc => {
-  const maxH = Math.max(...loc.daily.map(d => d.high));
+  return {
+    ...loc,
+    current: {
+      temperature: d.current.temperature_2m,
+      isDay:       d.current.is_day === 1,
+      wmoCode:     d.current.weather_code,
+    },
+    daily: d.daily.time.map((date, i) => ({
+      date,
+      dayName: DAY_NAMES[new Date(date).getDay()],
+      high:    d.daily.temperature_2m_max[i],
+      precipitation_chance: d.daily.precipitation_probability_max[i] ?? 0,
+      wmoCode: d.daily.weather_code[i],
+    }))
+  };
+}
 
-  const forecastRows = loc.daily.map(d => `
-    <div class="forecast-row">
-      <span class="f-day">${d.day_of_week}</span>
-      <span class="f-icon">${rainIcon(d.precipitation_chance)}</span>
-      <div class="f-bar-wrap">
-        <div class="f-bar" style="width:${(d.high/maxH*100).toFixed(1)}%"></div>
-      </div>
-      <span class="f-temp">${d.high.toFixed(1)}°</span>
-      <span class="f-rain">${d.precipitation_chance}%</span>
-    </div>
-  `).join('');
+// ── Render ──
+function render(allData) {
+  const allHighs = allData.flatMap(d => d.daily.map(x => x.high));
+  const maxHigh  = Math.max(...allHighs);
 
-  cardsEl.innerHTML += `
-    <div class="card">
-      <div class="card-header">
-        <div class="location-info">
-          <div class="flag">${loc.flag}</div>
-          <div class="city">${loc.city}</div>
-          <div class="country">${loc.country}</div>
+  // Cards
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+
+  allData.forEach(loc => {
+    const { text: condText, icon: condIcon } = wmoInfo(loc.current.wmoCode, loc.current.isDay);
+    const maxH = Math.max(...loc.daily.map(d => d.high));
+
+    const rows = loc.daily.map(d => `
+      <div class="forecast-row">
+        <span class="f-day">${d.dayName}</span>
+        <span class="f-icon">${rainIcon(d.precipitation_chance)}</span>
+        <div class="f-bar-wrap"><div class="f-bar" style="width:${(d.high/maxH*100).toFixed(1)}%"></div></div>
+        <span class="f-temp">${d.high.toFixed(1)}°</span>
+        <span class="f-rain">${d.precipitation_chance}%</span>
+      </div>`).join('');
+
+    grid.innerHTML += `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="flag">${loc.flag}</div>
+            <div class="city">${loc.city}</div>
+            <div class="country">${loc.country}</div>
+          </div>
+          <div class="condition-icon">${condIcon}</div>
         </div>
-        <div class="condition-icon">${conditionIcon(loc.current.condition)}</div>
-      </div>
-      <div class="current-temp">
-        <span class="temp-value">${loc.current.temperature.toFixed(1)}</span>
-        <span class="temp-unit">°C</span>
-      </div>
-      <div class="condition-text">${loc.current.condition_text}</div>
-      <div class="divider"></div>
-      <div class="forecast-label">5-Tage Vorhersage &nbsp;·&nbsp; 💧 Regenwahrscheinlichkeit</div>
-      ${forecastRows}
-    </div>
-  `;
-});
+        <div class="current-temp">
+          <span class="temp-value">${loc.current.temperature.toFixed(1)}</span>
+          <span class="temp-unit">°C</span>
+        </div>
+        <div class="condition-text">${condText}</div>
+        <div class="divider"></div>
+        <div class="forecast-label">5-Tage Vorhersage &nbsp;·&nbsp; 💧 Regenwahrscheinlichkeit</div>
+        ${rows}
+      </div>`;
+  });
 
-// ── Comparison bars ──
-const compareEl = document.getElementById('compare');
-const barColors = ['#5eaee8', '#4fc3a1', '#f5c542', '#e87d5e'];
+  document.getElementById('main-content').replaceWith(grid);
 
-const days = weatherData[0].daily;
-days.forEach((_, di) => {
-  const highs = weatherData.map(loc => loc.daily[di].high);
-  const dayMaxH = Math.max(...highs);
+  // Comparison
+  const compareEl = document.getElementById('compare');
+  const legendEl  = document.getElementById('legend');
+  const days = allData[0].daily;
 
-  const bars = weatherData.map((loc, li) => {
-    const h = loc.daily[di].high;
-    const pct = ((h / maxHigh) * 52).toFixed(1);
-    return `
-      <div class="compare-bar-wrap">
-        <div class="compare-bar" style="height:${pct}px; --col:${barColors[li]};"></div>
+  days.forEach((_, di) => {
+    const bars = allData.map((loc, li) => {
+      const h   = loc.daily[di].high;
+      const pct = ((h / maxHigh) * 52).toFixed(1);
+      return `<div class="compare-bar-wrap">
+        <div class="compare-bar" style="height:${pct}px;--col:${BAR_COLORS[li]};"></div>
         <div class="compare-bar-val">${h.toFixed(0)}°</div>
       </div>`;
-  }).join('');
+    }).join('');
 
-  const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-  const d = new Date(days[di].date);
-  const label = dayNames[d.getDay()];
+    const d   = new Date(days[di].date);
+    compareEl.innerHTML += `
+      <div class="compare-day">
+        <div class="compare-day-name">${DAY_NAMES[d.getDay()]} ${d.getDate()}.${d.getMonth()+1}.</div>
+        <div class="compare-bars">${bars}</div>
+      </div>`;
+  });
 
-  compareEl.innerHTML += `
-    <div class="compare-day">
-      <div class="compare-day-name">${label} ${d.getDate()}.${d.getMonth()+1}.</div>
-      <div class="compare-bars">${bars}</div>
-      <div style="display:flex;justify-content:center;gap:5px;margin-top:8px;">
-        ${weatherData.map((loc,li)=>`<div style="width:8px;height:8px;border-radius:50%;background:${barColors[li]};"></div>`).join('')}
-      </div>
-    </div>
-  `;
-});
+  legendEl.innerHTML = allData.map((loc, li) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${BAR_COLORS[li]}"></div>
+      <span>${loc.city}</span>
+    </div>`).join('');
+
+  document.getElementById('compare-section').style.display = '';
+}
+
+// ── Init ──
+async function init() {
+  try {
+    const allData = await Promise.all(LOCATIONS.map(fetchWeather));
+    render(allData);
+  } catch (err) {
+    document.getElementById('main-content').innerHTML = `
+      <div class="error-msg">
+        ⚠️ Wetterdaten konnten nicht geladen werden.<br>
+        <small>${err.message}</small><br>
+        <small>Bitte Internetverbindung prüfen und Seite neu laden.</small>
+      </div>`;
+    console.error(err);
+  }
+}
+
+init();
 </script>
 </body>
 </html>
