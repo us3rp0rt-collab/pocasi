@@ -52,6 +52,47 @@
   /* Layout */
   .page { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 48px 24px 80px; }
 
+  /* ── Language Switcher ── */
+  .lang-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    animation: fade-up 0.6s ease both;
+  }
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .lang-btn:hover {
+    border-color: rgba(94,174,232,0.45);
+    color: var(--cloud);
+    transform: translateY(-1px);
+  }
+  .lang-btn.active {
+    background: rgba(94,174,232,0.18);
+    border-color: rgba(94,174,232,0.55);
+    color: var(--cloud);
+    box-shadow: 0 0 16px rgba(94,174,232,0.15);
+  }
+  .lang-flag { font-size: 1.25rem; line-height: 1; }
+  .lang-label { font-size: 0.65rem; }
+
+  /* Header */
   header { text-align: center; margin-bottom: 56px; animation: fade-up 0.8s ease both; }
   header h1 {
     font-family: 'Playfair Display', serif;
@@ -147,6 +188,8 @@
   @media (max-width: 600px) {
     .compare-grid { grid-template-columns: repeat(3, 1fr); }
     .compare-day:nth-child(n+4) { display: none; }
+    .lang-btn .lang-label { display: none; }
+    .lang-btn { padding: 8px 12px; }
   }
 </style>
 </head>
@@ -156,23 +199,42 @@
 <div class="aurora"></div>
 
 <div class="page">
+
+  <!-- Language Switcher -->
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('de')" id="btn-de">
+      <span class="lang-flag">🇩🇪</span>
+      <span class="lang-label">Deutsch</span>
+    </button>
+    <button class="lang-btn" onclick="setLang('nl')" id="btn-nl">
+      <span class="lang-flag">🇳🇱</span>
+      <span class="lang-label">Nederlands</span>
+    </button>
+    <button class="lang-btn" onclick="setLang('cz')" id="btn-cz">
+      <span class="lang-flag">🇨🇿</span>
+      <span class="lang-label">Čeština</span>
+    </button>
+  </div>
+
   <header>
-    <h1>Wetter&shy;übersicht</h1>
+    <h1 id="title-text">Wetterübersicht</h1>
     <div class="subtitle">Rhede &nbsp;·&nbsp; Raalte &nbsp;·&nbsp; Zlín &nbsp;·&nbsp; Brno</div>
     <div class="timestamp" id="ts"></div>
   </header>
 
   <div id="main-content">
-    <div class="loading">Wetterdaten werden geladen <span class="loading-dots"></span></div>
+    <div class="loading" id="loading-msg">Wetterdaten werden geladen <span class="loading-dots"></span></div>
   </div>
 
   <div class="compare-section" id="compare-section" style="display:none">
-    <div class="compare-label">5-Tage Höchsttemperaturen im Vergleich</div>
+    <div class="compare-label" id="compare-label-text">5-Tage Höchsttemperaturen im Vergleich</div>
     <div class="compare-grid" id="compare"></div>
     <div class="legend" id="legend"></div>
   </div>
 
-  <div class="source">Echtzeit-Daten: <a href="https://open-meteo.com" target="_blank">Open-Meteo.com</a> &nbsp;·&nbsp; Aktualisiert bei jedem Seitenaufruf</div>
+  <div class="source" id="source-text">
+    Echtzeit-Daten: <a href="https://open-meteo.com" target="_blank">Open-Meteo.com</a> &nbsp;·&nbsp; <span id="source-refresh"></span>
+  </div>
 </div>
 
 <script>
@@ -186,11 +248,107 @@ for (let i = 0; i < 130; i++) {
   starsEl.appendChild(s);
 }
 
+// ── Translations ──
+const LANGS = {
+  de: {
+    title:        'Wetterübersicht',
+    loading:      'Wetterdaten werden geladen',
+    stand:        'Stand',
+    uhr:          'Uhr',
+    compareLabel: '5-Tage Höchsttemperaturen im Vergleich',
+    forecastLabel:'5-Tage Vorhersage · 💧 Regenwahrscheinlichkeit',
+    refresh:      'Aktualisiert bei jedem Seitenaufruf',
+    errorTitle:   '⚠️ Wetterdaten konnten nicht geladen werden.',
+    errorHint:    'Bitte Internetverbindung prüfen und Seite neu laden.',
+    countries: { Deutschland:'Deutschland', Niederlande:'Niederlande', Tschechien:'Tschechien' },
+    wmo: {
+      0:'Klar', 1:'Teils bewölkt', 2:'Teils bewölkt', 3:'Bewölkt',
+      45:'Neblig', 48:'Neblig', 51:'Nieselregen', 53:'Nieselregen', 55:'Nieselregen',
+      61:'Regen', 63:'Regen', 65:'Starkregen', 71:'Schnee', 73:'Schnee', 75:'Schnee',
+      80:'Regenschauer', 81:'Regenschauer', 82:'Regenschauer',
+      85:'Schneeschauer', 86:'Schneeschauer', 95:'Gewitter', 96:'Gewitter', 99:'Gewitter',
+    },
+    days: ['So','Mo','Di','Mi','Do','Fr','Sa'],
+  },
+  nl: {
+    title:        'Weersoverzicht',
+    loading:      'Weergegevens worden geladen',
+    stand:        'Stand',
+    uhr:          'uur',
+    compareLabel: '5-daagse maximumtemperaturen vergeleken',
+    forecastLabel:'5-daagse voorspelling · 💧 Neerslagkans',
+    refresh:      'Bijgewerkt bij elk paginabezoek',
+    errorTitle:   '⚠️ Weergegevens konden niet worden geladen.',
+    errorHint:    'Controleer de internetverbinding en laad de pagina opnieuw.',
+    countries: { Deutschland:'Duitsland', Niederlande:'Nederland', Tschechien:'Tsjechië' },
+    wmo: {
+      0:'Helder', 1:'Gedeeltelijk bewolkt', 2:'Gedeeltelijk bewolkt', 3:'Bewolkt',
+      45:'Mistig', 48:'Mistig', 51:'Motregen', 53:'Motregen', 55:'Motregen',
+      61:'Regen', 63:'Regen', 65:'Zware regen', 71:'Sneeuw', 73:'Sneeuw', 75:'Sneeuw',
+      80:'Regenbuien', 81:'Regenbuien', 82:'Regenbuien',
+      85:'Sneeuwbuien', 86:'Sneeuwbuien', 95:'Onweer', 96:'Onweer', 99:'Onweer',
+    },
+    days: ['Zo','Ma','Di','Wo','Do','Vr','Za'],
+  },
+  cz: {
+    title:        'Přehled počasí',
+    loading:      'Načítání dat o počasí',
+    stand:        'Stav',
+    uhr:          'hod',
+    compareLabel: 'Porovnání maximálních teplot na 5 dní',
+    forecastLabel:'Předpověď na 5 dní · 💧 Pravděpodobnost srážek',
+    refresh:      'Aktualizováno při každém načtení stránky',
+    errorTitle:   '⚠️ Data o počasí se nepodařilo načíst.',
+    errorHint:    'Zkontrolujte připojení k internetu a obnovte stránku.',
+    countries: { Deutschland:'Německo', Niederlande:'Nizozemsko', Tschechien:'Česká republika' },
+    wmo: {
+      0:'Jasno', 1:'Částečně oblačno', 2:'Částečně oblačno', 3:'Oblačno',
+      45:'Mlhavo', 48:'Mlhavo', 51:'Mrholení', 53:'Mrholení', 55:'Mrholení',
+      61:'Déšť', 63:'Déšť', 65:'Silný déšť', 71:'Sníh', 73:'Sníh', 75:'Sníh',
+      80:'Přeháňky', 81:'Přeháňky', 82:'Přeháňky',
+      85:'Sněhové přeháňky', 86:'Sněhové přeháňky', 95:'Bouřka', 96:'Bouřka', 99:'Bouřka',
+    },
+    days: ['Ne','Po','Út','St','Čt','Pá','So'],
+  }
+};
+
+let currentLang = 'de';
+let cachedData  = null;
+
+// ── WMO → text + icon ──
+function wmoInfo(code, isDay, lang) {
+  const t = LANGS[lang];
+  // find best matching key (exact or nearest lower)
+  const keys = Object.keys(t.wmo).map(Number).sort((a,b)=>a-b);
+  let label = t.wmo[0];
+  for (const k of keys) { if (code >= k) label = t.wmo[k]; }
+
+  let icon;
+  if (code === 0)       icon = isDay ? '☀️' : '🌙';
+  else if (code <= 2)   icon = '⛅';
+  else if (code === 3)  icon = '☁️';
+  else if (code <= 49)  icon = '🌫️';
+  else if (code <= 55)  icon = '🌦️';
+  else if (code <= 67)  icon = '🌧️';
+  else if (code <= 77)  icon = '❄️';
+  else if (code <= 82)  icon = '🌦️';
+  else if (code <= 86)  icon = '🌨️';
+  else                  icon = '⛈️';
+
+  return { text: label, icon };
+}
+
+const rainIcon = p => p >= 70 ? '🌧️' : p >= 40 ? '🌦️' : p >= 15 ? '⛅' : '☀️';
+
 // ── Timestamp ──
-document.getElementById('ts').textContent =
-  'Stand: ' + new Date().toLocaleString('de-DE', {
+function updateTimestamp(lang) {
+  const t  = LANGS[lang];
+  const lo = lang === 'cz' ? 'cs-CZ' : lang === 'nl' ? 'nl-NL' : 'de-DE';
+  const ts = new Date().toLocaleString(lo, {
     weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'
-  }) + ' Uhr';
+  });
+  document.getElementById('ts').textContent = `${t.stand}: ${ts} ${t.uhr}`;
+}
 
 // ── Config ──
 const LOCATIONS = [
@@ -200,37 +358,17 @@ const LOCATIONS = [
   { city:'Brno',   country:'Tschechien',  flag:'🇨🇿', lat:49.1951, lon:16.6068 },
 ];
 const BAR_COLORS = ['#5eaee8','#4fc3a1','#f5c542','#e87d5e'];
-const DAY_NAMES  = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 
-// ── WMO code → label + icon ──
-function wmoInfo(code, isDay) {
-  if (code === 0)       return { text:'Klar',           icon: isDay ? '☀️' : '🌙' };
-  if (code <= 2)        return { text:'Teils bewölkt',  icon:'⛅' };
-  if (code === 3)       return { text:'Bewölkt',         icon:'☁️' };
-  if (code <= 49)       return { text:'Neblig',          icon:'🌫️' };
-  if (code <= 55)       return { text:'Nieselregen',     icon:'🌦️' };
-  if (code <= 67)       return { text:'Regen',           icon:'🌧️' };
-  if (code <= 77)       return { text:'Schnee',          icon:'❄️' };
-  if (code <= 82)       return { text:'Regenschauer',    icon:'🌦️' };
-  if (code <= 86)       return { text:'Schneeschauer',   icon:'🌨️' };
-  if (code <= 99)       return { text:'Gewitter',        icon:'⛈️' };
-  return { text:'Unbekannt', icon:'🌡️' };
-}
-
-const rainIcon = p => p >= 70 ? '🌧️' : p >= 40 ? '🌦️' : p >= 15 ? '⛅' : '☀️';
-
-// ── Fetch one location ──
+// ── Fetch ──
 async function fetchWeather(loc) {
   const url = `https://api.open-meteo.com/v1/forecast`
     + `?latitude=${loc.lat}&longitude=${loc.lon}`
     + `&current=temperature_2m,weather_code,is_day`
     + `&daily=weather_code,temperature_2m_max,precipitation_probability_max`
     + `&timezone=auto&forecast_days=5`;
-
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} für ${loc.city}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${loc.city}`);
   const d = await res.json();
-
   return {
     ...loc,
     current: {
@@ -240,7 +378,6 @@ async function fetchWeather(loc) {
     },
     daily: d.daily.time.map((date, i) => ({
       date,
-      dayName: DAY_NAMES[new Date(date).getDay()],
       high:    d.daily.temperature_2m_max[i],
       precipitation_chance: d.daily.precipitation_probability_max[i] ?? 0,
       wmoCode: d.daily.weather_code[i],
@@ -248,27 +385,41 @@ async function fetchWeather(loc) {
   };
 }
 
-// ── Render ──
-function render(allData) {
+// ── Render with given language ──
+function render(allData, lang) {
+  const t        = LANGS[lang];
   const allHighs = allData.flatMap(d => d.daily.map(x => x.high));
   const maxHigh  = Math.max(...allHighs);
+
+  // Update static UI texts
+  document.getElementById('title-text').textContent      = t.title;
+  document.getElementById('compare-label-text').textContent = t.compareLabel;
+  document.getElementById('source-refresh').textContent  = t.refresh;
+  document.documentElement.lang = lang === 'cz' ? 'cs' : lang;
+  updateTimestamp(lang);
 
   // Cards
   const grid = document.createElement('div');
   grid.className = 'grid';
+  grid.id = 'weather-grid';
 
   allData.forEach(loc => {
-    const { text: condText, icon: condIcon } = wmoInfo(loc.current.wmoCode, loc.current.isDay);
+    const { text: condText, icon: condIcon } = wmoInfo(loc.current.wmoCode, loc.current.isDay, lang);
     const maxH = Math.max(...loc.daily.map(d => d.high));
 
-    const rows = loc.daily.map(d => `
-      <div class="forecast-row">
-        <span class="f-day">${d.dayName}</span>
-        <span class="f-icon">${rainIcon(d.precipitation_chance)}</span>
-        <div class="f-bar-wrap"><div class="f-bar" style="width:${(d.high/maxH*100).toFixed(1)}%"></div></div>
-        <span class="f-temp">${d.high.toFixed(1)}°</span>
-        <span class="f-rain">${d.precipitation_chance}%</span>
-      </div>`).join('');
+    const rows = loc.daily.map(d => {
+      const dn = t.days[new Date(d.date).getDay()];
+      return `
+        <div class="forecast-row">
+          <span class="f-day">${dn}</span>
+          <span class="f-icon">${rainIcon(d.precipitation_chance)}</span>
+          <div class="f-bar-wrap"><div class="f-bar" style="width:${(d.high/maxH*100).toFixed(1)}%"></div></div>
+          <span class="f-temp">${d.high.toFixed(1)}°</span>
+          <span class="f-rain">${d.precipitation_chance}%</span>
+        </div>`;
+    }).join('');
+
+    const countryName = t.countries[loc.country] || loc.country;
 
     grid.innerHTML += `
       <div class="card">
@@ -276,7 +427,7 @@ function render(allData) {
           <div>
             <div class="flag">${loc.flag}</div>
             <div class="city">${loc.city}</div>
-            <div class="country">${loc.country}</div>
+            <div class="country">${countryName}</div>
           </div>
           <div class="condition-icon">${condIcon}</div>
         </div>
@@ -286,18 +437,22 @@ function render(allData) {
         </div>
         <div class="condition-text">${condText}</div>
         <div class="divider"></div>
-        <div class="forecast-label">5-Tage Vorhersage &nbsp;·&nbsp; 💧 Regenwahrscheinlichkeit</div>
+        <div class="forecast-label">${t.forecastLabel}</div>
         ${rows}
       </div>`;
   });
 
-  document.getElementById('main-content').replaceWith(grid);
+  const existing = document.getElementById('weather-grid');
+  if (existing) existing.replaceWith(grid);
+  else document.getElementById('main-content').replaceWith(grid);
 
   // Comparison
   const compareEl = document.getElementById('compare');
   const legendEl  = document.getElementById('legend');
-  const days = allData[0].daily;
+  compareEl.innerHTML = '';
+  legendEl.innerHTML  = '';
 
+  const days = allData[0].daily;
   days.forEach((_, di) => {
     const bars = allData.map((loc, li) => {
       const h   = loc.daily[di].high;
@@ -309,9 +464,10 @@ function render(allData) {
     }).join('');
 
     const d   = new Date(days[di].date);
+    const dn  = t.days[d.getDay()];
     compareEl.innerHTML += `
       <div class="compare-day">
-        <div class="compare-day-name">${DAY_NAMES[d.getDay()]} ${d.getDate()}.${d.getMonth()+1}.</div>
+        <div class="compare-day-name">${dn} ${d.getDate()}.${d.getMonth()+1}.</div>
         <div class="compare-bars">${bars}</div>
       </div>`;
   });
@@ -325,18 +481,38 @@ function render(allData) {
   document.getElementById('compare-section').style.display = '';
 }
 
+// ── Language switch ──
+function setLang(lang) {
+  if (lang === currentLang) return;
+  currentLang = lang;
+
+  // Update active button
+  ['de','nl','cz'].forEach(l => {
+    document.getElementById(`btn-${l}`).classList.toggle('active', l === lang);
+  });
+
+  // Re-render with cached data if available
+  if (cachedData) render(cachedData, lang);
+}
+
 // ── Init ──
 async function init() {
+  const t = LANGS[currentLang];
+  updateTimestamp(currentLang);
+
   try {
-    const allData = await Promise.all(LOCATIONS.map(fetchWeather));
-    render(allData);
+    cachedData = await Promise.all(LOCATIONS.map(fetchWeather));
+    render(cachedData, currentLang);
   } catch (err) {
-    document.getElementById('main-content').innerHTML = `
-      <div class="error-msg">
-        ⚠️ Wetterdaten konnten nicht geladen werden.<br>
-        <small>${err.message}</small><br>
-        <small>Bitte Internetverbindung prüfen und Seite neu laden.</small>
-      </div>`;
+    const mc = document.getElementById('main-content');
+    if (mc) {
+      mc.innerHTML = `
+        <div class="error-msg">
+          ${LANGS[currentLang].errorTitle}<br>
+          <small>${err.message}</small><br>
+          <small>${LANGS[currentLang].errorHint}</small>
+        </div>`;
+    }
     console.error(err);
   }
 }
