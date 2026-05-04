@@ -281,7 +281,7 @@
 <div class="page">
   <header>
     <h1>Wetter&shy;übersicht</h1>
-    <div class="subtitle">Rhede &nbsp;·&nbsp; Raalte &nbsp;·&nbsp; Zlín</div>
+    <div class="subtitle">Rhede &nbsp;·&nbsp; Raalte &nbsp;·&nbsp; Zlín &nbsp;·&nbsp; Brno</div>
     <div class="timestamp" id="ts"></div>
   </header>
 
@@ -326,11 +326,11 @@ const weatherData = [
     flag: '🇩🇪',
     current: { temperature: 12.7, condition: 'cloudy', condition_text: 'Bewölkt' },
     daily: [
-      { date:'2026-05-03', day_of_week:'So', high:21.2, precipitation_chance:35 },
       { date:'2026-05-04', day_of_week:'Mo', high:19.8, precipitation_chance:35 },
       { date:'2026-05-05', day_of_week:'Di', high:12.7, precipitation_chance:35 },
       { date:'2026-05-06', day_of_week:'Mi', high:9.1,  precipitation_chance:45 },
       { date:'2026-05-07', day_of_week:'Do', high:14.5, precipitation_chance:20 },
+      { date:'2026-05-08', day_of_week:'Fr', high:13.0, precipitation_chance:15 },
     ]
   },
   {
@@ -339,11 +339,11 @@ const weatherData = [
     flag: '🇳🇱',
     current: { temperature: 12.7, condition: 'mostly_cloudy', condition_text: 'Meist bewölkt' },
     daily: [
-      { date:'2026-05-03', day_of_week:'So', high:20.2, precipitation_chance:65 },
       { date:'2026-05-04', day_of_week:'Mo', high:19.4, precipitation_chance:35 },
       { date:'2026-05-05', day_of_week:'Di', high:12.5, precipitation_chance:35 },
       { date:'2026-05-06', day_of_week:'Mi', high:9.4,  precipitation_chance:20 },
       { date:'2026-05-07', day_of_week:'Do', high:15.7, precipitation_chance:10 },
+      { date:'2026-05-08', day_of_week:'Fr', high:14.2, precipitation_chance:10 },
     ]
   },
   {
@@ -352,11 +352,24 @@ const weatherData = [
     flag: '🇨🇿',
     current: { temperature: 12.6, condition: 'partly_cloudy', condition_text: 'Teils bewölkt' },
     daily: [
-      { date:'2026-05-03', day_of_week:'So', high:23.5, precipitation_chance:0  },
       { date:'2026-05-04', day_of_week:'Mo', high:25.2, precipitation_chance:10 },
       { date:'2026-05-05', day_of_week:'Di', high:24.6, precipitation_chance:10 },
       { date:'2026-05-06', day_of_week:'Mi', high:23.0, precipitation_chance:20 },
       { date:'2026-05-07', day_of_week:'Do', high:17.5, precipitation_chance:35 },
+      { date:'2026-05-08', day_of_week:'Fr', high:16.0, precipitation_chance:25 },
+    ]
+  },
+  {
+    city: 'Brno',
+    country: 'Tschechien',
+    flag: '🇨🇿',
+    current: { temperature: 19.7, condition: 'partly_cloudy', condition_text: 'Teils bewölkt' },
+    daily: [
+      { date:'2026-05-04', day_of_week:'Mo', high:25.6, precipitation_chance:10 },
+      { date:'2026-05-05', day_of_week:'Di', high:25.4, precipitation_chance:10 },
+      { date:'2026-05-06', day_of_week:'Mi', high:23.5, precipitation_chance:25 },
+      { date:'2026-05-07', day_of_week:'Do', high:20.4, precipitation_chance:35 },
+      { date:'2026-05-08', day_of_week:'Fr', high:21.5, precipitation_chance:20 },
     ]
   }
 ];
@@ -422,7 +435,7 @@ weatherData.forEach(loc => {
 
 // ── Comparison bars ──
 const compareEl = document.getElementById('compare');
-const barColors = ['#5eaee8', '#4fc3a1', '#f5c542'];
+const barColors = ['#5eaee8', '#4fc3a1', '#f5c542', '#e87d5e'];
 
 const days = weatherData[0].daily;
 days.forEach((_, di) => {
