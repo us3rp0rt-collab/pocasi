@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wetter · Rhede · Raalte · Zlín</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky-deep:   #0b1a2e;
+    --sky-mid:    #132844;
+    --sky-glow:   #1e4070;
+    --accent:     #5eaee8;
+    --accent2:    #f5c542;
+    --cloud:      #c9dff5;
+    --mist:       rgba(94,174,232,0.12);
+    --rain:       #7ab8e8;
+    --warm:       #f79552;
+    --text:       #e8f2fc;
+    --text-dim:   #7fa8cc;
+    --card-bg:    rgba(19,40,68,0.80);
+    --border:     rgba(94,174,232,0.18);
+    --radius:     18px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--sky-deep);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Starfield ── */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
+    opacity: 0;
+  }
+  @keyframes twinkle { from { opacity: 0.05; } to { opacity: var(--op, 0.6); } }
+
+  /* ── Aurora strip ── */
+  .aurora {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 340px; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 90% 60% at 50% -10%,
+      rgba(30,64,112,0.9) 0%, rgba(94,174,232,0.18) 55%, transparent 80%);
+    animation: aurora-shift 12s ease-in-out infinite alternate;
+  }
+  @keyframes aurora-shift {
+    0%   { transform: scaleX(1)   translateY(0); }
+    50%  { transform: scaleX(1.1) translateY(8px); }
+    100% { transform: scaleX(0.95) translateY(-6px); }
+  }
+
+  /* ── Layout ── */
+  .page { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fade-up 0.8s ease both;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--cloud);
+    text-shadow: 0 0 40px rgba(94,174,232,0.5);
+  }
+  header .subtitle {
+    margin-top: 10px;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  header .timestamp {
+    margin-top: 6px;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    opacity: 0.7;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px 28px;
+    backdrop-filter: blur(18px);
+    animation: fade-up 0.8s ease both;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(94,174,232,0.28);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(94,174,232,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .card:nth-child(1) { animation-delay: 0.1s; }
+  .card:nth-child(2) { animation-delay: 0.25s; }
+  .card:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ── Card header ── */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .location-info {}
+  .flag { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; }
+  .city {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--cloud);
+    line-height: 1.15;
+  }
+  .country {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .condition-icon { font-size: 3rem; line-height: 1; filter: drop-shadow(0 0 12px rgba(94,174,232,0.5)); }
+
+  /* ── Current temp ── */
+  .current-temp {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .temp-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(94,174,232,0.4);
+  }
+  .temp-unit { font-size: 1.4rem; color: var(--text-dim); }
+  .condition-text {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 -4px 24px;
+  }
+
+  /* ── Forecast ── */
+  .forecast-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .forecast-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(94,174,232,0.07);
+  }
+  .forecast-row:last-child { border-bottom: none; }
+  .f-day { font-size: 0.7rem; color: var(--text-dim); width: 36px; }
+  .f-icon { font-size: 1.1rem; }
+  .f-bar-wrap { flex: 1; margin: 0 12px; position: relative; height: 4px; background: rgba(94,174,232,0.1); border-radius: 2px; }
+  .f-bar {
+    position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--warm));
+    transition: width 1s ease;
+  }
+  .f-temp {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--cloud);
+    width: 36px;
+    text-align: right;
+  }
+  .f-rain {
+    font-size: 0.62rem;
+    color: var(--rain);
+    width: 28px;
+    text-align: right;
+  }
+
+  /* ── Comparison strip ── */
+  .compare-section {
+    margin-top: 56px;
+    animation: fade-up 0.8s 0.55s ease both;
+  }
+  .compare-label {
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .compare-day {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+  }
+  .compare-day-name {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .compare-bars { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 56px; }
+  .compare-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .compare-bar {
+    width: 12px;
+    border-radius: 3px 3px 0 0;
+    background: var(--col);
+    transition: height 1.2s ease;
+  }
+  .compare-bar-val { font-size: 0.55rem; color: var(--text-dim); }
+
+  /* ── Animations ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    .compare-grid { grid-template-columns: repeat(3, 1fr); }
+    .compare-day:nth-child(n+4) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="aurora"></div>
+
+<div class="page">
+  <header>
+    <h1>Wetter&shy;übersicht</h1>
+    <div class="subtitle">Rhede &nbsp;·&nbsp; Raalte &nbsp;·&nbsp; Zlín</div>
+    <div class="timestamp" id="ts"></div>
+  </header>
+
+  <div class="grid" id="cards"></div>
+
+  <div class="compare-section">
+    <div class="compare-label">5-Tage Höchsttemperaturen im Vergleich</div>
+    <div class="compare-grid" id="compare"></div>
+  </div>
+</div>
+
+<script>
+// ── Starfield ──
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 130; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 2.2 + 0.5;
+  s.style.cssText = `
+    width:${sz}px; height:${sz}px;
+    left:${Math.random()*100}%;
+    top:${Math.random()*100}%;
+    --d:${(Math.random()*4+2).toFixed(1)}s;
+    --op:${(Math.random()*0.5+0.15).toFixed(2)};
+    animation-delay:${(Math.random()*5).toFixed(1)}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// ── Timestamp ──
+document.getElementById('ts').textContent =
+  'Stand: ' + new Date().toLocaleString('de-DE', {
+    weekday:'long', day:'2-digit', month:'long', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  }) + ' Uhr';
+
+// ── Data ──
+const weatherData = [
+  {
+    city: 'Rhede',
+    country: 'Deutschland',
+    flag: '🇩🇪',
+    current: { temperature: 12.7, condition: 'cloudy', condition_text: 'Bewölkt' },
+    daily: [
+      { date:'2026-05-03', day_of_week:'So', high:21.2, precipitation_chance:35 },
+      { date:'2026-05-04', day_of_week:'Mo', high:19.8, precipitation_chance:35 },
+      { date:'2026-05-05', day_of_week:'Di', high:12.7, precipitation_chance:35 },
+      { date:'2026-05-06', day_of_week:'Mi', high:9.1,  precipitation_chance:45 },
+      { date:'2026-05-07', day_of_week:'Do', high:14.5, precipitation_chance:20 },
+    ]
+  },
+  {
+    city: 'Raalte',
+    country: 'Niederlande',
+    flag: '🇳🇱',
+    current: { temperature: 12.7, condition: 'mostly_cloudy', condition_text: 'Meist bewölkt' },
+    daily: [
+      { date:'2026-05-03', day_of_week:'So', high:20.2, precipitation_chance:65 },
+      { date:'2026-05-04', day_of_week:'Mo', high:19.4, precipitation_chance:35 },
+      { date:'2026-05-05', day_of_week:'Di', high:12.5, precipitation_chance:35 },
+      { date:'2026-05-06', day_of_week:'Mi', high:9.4,  precipitation_chance:20 },
+      { date:'2026-05-07', day_of_week:'Do', high:15.7, precipitation_chance:10 },
+    ]
+  },
+  {
+    city: 'Zlín',
+    country: 'Tschechien',
+    flag: '🇨🇿',
+    current: { temperature: 12.6, condition: 'partly_cloudy', condition_text: 'Teils bewölkt' },
+    daily: [
+      { date:'2026-05-03', day_of_week:'So', high:23.5, precipitation_chance:0  },
+      { date:'2026-05-04', day_of_week:'Mo', high:25.2, precipitation_chance:10 },
+      { date:'2026-05-05', day_of_week:'Di', high:24.6, precipitation_chance:10 },
+      { date:'2026-05-06', day_of_week:'Mi', high:23.0, precipitation_chance:20 },
+      { date:'2026-05-07', day_of_week:'Do', high:17.5, precipitation_chance:35 },
+    ]
+  }
+];
+
+const conditionIcon = c => ({
+  sunny:        '☀️',
+  clear:        '🌙',
+  partly_cloudy:'⛅',
+  mostly_cloudy:'🌥️',
+  cloudy:       '☁️',
+  rain:         '🌧️',
+  drizzle:      '🌦️',
+  snow:         '❄️',
+  thunderstorm: '⛈️',
+  foggy:        '🌫️',
+}[c] || '🌡️');
+
+const rainIcon = p => p >= 70 ? '🌧️' : p >= 40 ? '🌦️' : p >= 15 ? '⛅' : '☀️';
+
+// All-location max high for bar scaling
+const allHighs = weatherData.flatMap(d => d.daily.map(x => x.high));
+const maxHigh  = Math.max(...allHighs);
+
+// ── Cards ──
+const cardsEl = document.getElementById('cards');
+
+weatherData.forEach(loc => {
+  const maxH = Math.max(...loc.daily.map(d => d.high));
+
+  const forecastRows = loc.daily.map(d => `
+    <div class="forecast-row">
+      <span class="f-day">${d.day_of_week}</span>
+      <span class="f-icon">${rainIcon(d.precipitation_chance)}</span>
+      <div class="f-bar-wrap">
+        <div class="f-bar" style="width:${(d.high/maxH*100).toFixed(1)}%"></div>
+      </div>
+      <span class="f-temp">${d.high.toFixed(1)}°</span>
+      <span class="f-rain">${d.precipitation_chance}%</span>
+    </div>
+  `).join('');
+
+  cardsEl.innerHTML += `
+    <div class="card">
+      <div class="card-header">
+        <div class="location-info">
+          <div class="flag">${loc.flag}</div>
+          <div class="city">${loc.city}</div>
+          <div class="country">${loc.country}</div>
+        </div>
+        <div class="condition-icon">${conditionIcon(loc.current.condition)}</div>
+      </div>
+      <div class="current-temp">
+        <span class="temp-value">${loc.current.temperature.toFixed(1)}</span>
+        <span class="temp-unit">°C</span>
+      </div>
+      <div class="condition-text">${loc.current.condition_text}</div>
+      <div class="divider"></div>
+      <div class="forecast-label">5-Tage Vorhersage &nbsp;·&nbsp; 💧 Regenwahrscheinlichkeit</div>
+      ${forecastRows}
+    </div>
+  `;
+});
+
+// ── Comparison bars ──
+const compareEl = document.getElementById('compare');
+const barColors = ['#5eaee8', '#4fc3a1', '#f5c542'];
+
+const days = weatherData[0].daily;
+days.forEach((_, di) => {
+  const highs = weatherData.map(loc => loc.daily[di].high);
+  const dayMaxH = Math.max(...highs);
+
+  const bars = weatherData.map((loc, li) => {
+    const h = loc.daily[di].high;
+    const pct = ((h / maxHigh) * 52).toFixed(1);
+    return `
+      <div class="compare-bar-wrap">
+        <div class="compare-bar" style="height:${pct}px; --col:${barColors[li]};"></div>
+        <div class="compare-bar-val">${h.toFixed(0)}°</div>
+      </div>`;
+  }).join('');
+
+  const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const d = new Date(days[di].date);
+  const label = dayNames[d.getDay()];
+
+  compareEl.innerHTML += `
+    <div class="compare-day">
+      <div class="compare-day-name">${label} ${d.getDate()}.${d.getMonth()+1}.</div>
+      <div class="compare-bars">${bars}</div>
+      <div style="display:flex;justify-content:center;gap:5px;margin-top:8px;">
+        ${weatherData.map((loc,li)=>`<div style="width:8px;height:8px;border-radius:50%;background:${barColors[li]};"></div>`).join('')}
+      </div>
+    </div>
+  `;
+});
+</script>
+</body>
+</html>
